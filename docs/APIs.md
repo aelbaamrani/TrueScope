@@ -1,3 +1,10 @@
+# APIs Overview
+Our app uses external fact-check APIs to verify claims.  
+Main APIs:
+- Google Fact Check Tools
+- PolitiFact (maybe)
+- News API (maybe)
+
 # APIs & Resources Documentation
 
 ## Google Fact Check Tools API
