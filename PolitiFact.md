@@ -1,14 +1,14 @@
 
 ---
 
-### 📄 `docs/apis/PolitiFact.md`
+
 ```markdown
-# PolitiFact API (Unofficial)
+# PolitiFact API (maybe)
 
 ## Overview
 PolitiFact is a well-known fact-checking organization. While there is no official public API, developers have created **unofficial endpoints** that can be used to fetch claims.
 
-⚠️ Since it’s a maybe, there’s no guarantee of stability or long-term support. (we will have to further look into it as we move forward)
+Since it’s a maybe, there’s no guarantee of stability or long-term support. (We will have to further look into it as we move forward)
 
 ## Example Endpoint
 https://api.politifact.com/factchecks?format=json&limit=5
