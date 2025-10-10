@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fact Check Tool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <h2>TrueScope</h2>
+
+  <input type="text" id="claimInput" placeholder="Enter a claim to verify..." />
+  <button onclick="checkClaim()">Check Claim</button>
+
+  <div id="results"></div>
+
+  <script>
+    async function checkClaim() {
+      const claim = document.getElementById('claimInput').value.trim();
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p class="loading">Checking...</p>';
+
+      if (!claim) {
+        resultsDiv.innerHTML = '<p class="no-result">Please enter a claim to verify.</p>';
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/fact-check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ claim })
+        });
+
+        const data = await response.json();
+
+        if (!data.found || !data.reviews || data.reviews.length === 0) {
+          resultsDiv.innerHTML = '<p class="no-result">No reviews found for this claim.</p>';
+          return;
+        }
+
+        resultsDiv.innerHTML = data.reviews.map(review => {
+          const ratingText = review.rating.toLowerCase();
+          let colorClass = 'result';
+
+          if (ratingText.includes('false') || ratingText.includes('misleading') || ratingText.includes('incorrect')) {
+            colorClass += ' false';
+          } else if (ratingText.includes('true') || ratingText.includes('correct') || ratingText.includes('accurate')) {
+            colorClass += ' true';
+          }
+
+          return `
+            <div class="${colorClass}">
+              <strong>${review.title}</strong><br/>
+              <em>by ${review.publisher}</em><br/>
+              <p>${review.text}</p>
+              <p><strong>Rating:</strong> ${review.rating}</p>
+              <a href="${review.url}" target="_blank">Read more</a>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error(error);
+        resultsDiv.innerHTML = '<p class="no-result">Something went wrong. Please try again.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
