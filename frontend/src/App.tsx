@@ -2,23 +2,40 @@ import { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-function App() {
-  const [claim, setClaim] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
-  const [selectedReview, setSelectedReview] = useState(null);
-  const [currentView, setCurrentView] = useState('search');
-  const [aiInsight, setAiInsight] = useState('');
+interface Review {
+  publisher: string;
+  title: string;
+  url: string;
+  text: string;
+  rating: string;
+}
 
-  const generateAiInsight = async (claimText) => {
-    // In a real implementation, you would call an AI API here
-    // For now, we'll create a simple dynamic response based on the claim
+interface FactCheckResult {
+  claim: string;
+  found: boolean;
+  reviews: Review[];
+}
+
+interface AiInsight {
+  insight: string;
+  sources: string;
+}
+
+function App() {
+  const [claim, setClaim] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [result, setResult] = useState<FactCheckResult | null>(null);
+  const [error, setError] = useState<string>('');
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [currentView, setCurrentView] = useState<'search' | 'results' | 'detail'>('search');
+  const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
+  const [isHelpful, setIsHelpful] = useState<boolean | null>(null);
+
+  const generateAiInsight = async (claimText: string): Promise<AiInsight> => {
     const lowerClaim = claimText.toLowerCase();
     
-    // This would be replaced with actual AI API call
-    const mockAiResponse = {
+    const mockAiResponse: AiInsight = {
       insight: `Based on general knowledge about "${claimText}": This claim appears to be making a statement that may require verification. Without specific fact-check results, it's important to consult reliable sources and scientific evidence. The claim touches on topics that should be examined through established research and credible information sources.`,
       sources: 'Recommended verification sources: Google Fact Check Tools, PolitiFact, FactCheck.org, academic journals, government agencies'
     };
@@ -26,7 +43,7 @@ function App() {
     return mockAiResponse;
   };
 
-  const checkClaim = async () => {
+  const checkClaim = async (): Promise<void> => {
     if (!claim.trim()) {
       setError('Please enter a claim to verify');
       return;
@@ -38,9 +55,10 @@ function App() {
     setHasSearched(true);
     setSelectedReview(null);
     setCurrentView('results');
+    setIsHelpful(null);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/fact-check', {
+      const response = await axios.post<FactCheckResult>('http://127.0.0.1:8000/fact-check', {
         claim: claim.trim()
       });
       
@@ -59,7 +77,7 @@ function App() {
     }
   };
 
-  const getRatingColor = (rating) => {
+  const getRatingColor = (rating: string): string => {
     if (!rating || rating === 'No rating') return '#4b5563';
     
     const lowerRating = rating.toLowerCase();
@@ -71,23 +89,28 @@ function App() {
     return '#4b5563';
   };
 
-  const handleReviewClick = (review) => {
+  const handleReviewClick = (review: Review): void => {
     setSelectedReview(review);
     setCurrentView('detail');
   };
 
-  const handleBackToResults = () => {
+  const handleBackToResults = (): void => {
     setCurrentView('results');
     setSelectedReview(null);
   };
 
-  const handleNewSearch = () => {
+  const handleNewSearch = (): void => {
     setCurrentView('search');
     setClaim('');
     setResult(null);
     setSelectedReview(null);
     setHasSearched(false);
-    setAiInsight('');
+    setAiInsight(null);
+    setIsHelpful(null);
+  };
+
+  const handleHelpfulClick = (helpful: boolean): void => {
+    setIsHelpful(helpful);
   };
 
   // Search View
@@ -95,7 +118,7 @@ function App() {
     return (
       <div className="app">
         <div className="container">
-          <div className="border-container">
+          <div className="border-container search-view">
             <div className="header-bar">
               <h2 className="header-title">TrueScope</h2>
             </div>
@@ -160,7 +183,7 @@ function App() {
               <div className="detailed-review">
                 <div className="review-header">
                   <h1 className="main-title">TrueScope</h1>
-                  <p className="claim-statement">Claim: {result.claim}</p>
+                  <p className="claim-statement">Claim: {result?.claim}</p>
                 </div>
                 
                 <div className="review-content">
@@ -178,7 +201,7 @@ function App() {
                   
                   <div className="review-text">
                     <p>{selectedReview.text === 'No review text' 
-                      ? `This fact-check by ${selectedReview.publisher} examines the claim "${result.claim}". The review provides analysis and verification of this statement using available evidence and reliable sources.` 
+                      ? `This fact-check by ${selectedReview.publisher} examines the claim "${result?.claim}". The review provides analysis and verification of this statement using available evidence and reliable sources.` 
                       : selectedReview.text}
                     </p>
                   </div>
@@ -265,33 +288,34 @@ function App() {
                     
                     <div className="source-breakdown">
                       <h3 className="section-title">Source Breakdown</h3>
-                      
-                      {result.reviews?.map((review, index) => (
-                        <div 
-                          key={index} 
-                          className="source-item clickable"
-                          onClick={() => handleReviewClick(review)}
-                        >
-                          <div className="source-header">
-                            <span className="source-publisher">{review.publisher}</span>
-                            <span 
-                              className="source-verdict" 
-                              style={{ color: getRatingColor(review.rating) }}
-                            >
-                              Rating: {review.rating}
-                            </span>
+                      <div className="reviews-grid">
+                        {result.reviews?.map((review, index) => (
+                          <div 
+                            key={index} 
+                            className="review-card"
+                            onClick={() => handleReviewClick(review)}
+                          >
+                            <div className="card-header">
+                              <span className="card-publisher">{review.publisher}</span>
+                              <span 
+                                className="card-rating" 
+                                style={{ color: getRatingColor(review.rating) }}
+                              >
+                                {review.rating}
+                              </span>
+                            </div>
+                            <h4 className="card-title">{review.title}</h4>
+                            <p className="card-text">
+                              {review.text === 'No review text' 
+                                ? `This fact-check examines the claim and provides verification analysis.` 
+                                : review.text}
+                            </p>
+                            <div className="card-link">
+                              Click to view details →
+                            </div>
                           </div>
-                          <h4 className="review-title">{review.title}</h4>
-                          <p className="source-details">
-                            {review.text === 'No review text' 
-                              ? `This fact-check examines the claim and provides verification analysis.` 
-                              : review.text}
-                          </p>
-                          <div className="source-link">
-                            Click to view details →
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -302,7 +326,7 @@ function App() {
                     <div className="ai-insight-section">
                       <h3 className="ai-insight-title">AI-Powered Insight</h3>
                       <div className="ai-insight-text">
-                        {aiInsight.insight ? (
+                        {aiInsight?.insight ? (
                           <>
                             {aiInsight.insight.split('\n').map((line, index) => (
                               <div key={index}>
@@ -322,14 +346,24 @@ function App() {
                       </div>
                       
                       <div className="source-references">
-                        <p>Source references: {aiInsight.sources || 'Various reliable sources and fact-checking organizations'}</p>
+                        <p>Source references: {aiInsight?.sources || 'Various reliable sources and fact-checking organizations'}</p>
                       </div>
                       
                       <div className="helpful-section">
                         <p className="helpful-question">Was this insight helpful?</p>
                         <div className="helpful-buttons">
-                          <button className="helpful-btn">Yes</button>
-                          <button className="helpful-btn">No</button>
+                          <button 
+                            className={`helpful-btn ${isHelpful === true ? 'helpful-yes active' : 'helpful-yes'}`}
+                            onClick={() => handleHelpfulClick(true)}
+                          >
+                            Yes
+                          </button>
+                          <button 
+                            className={`helpful-btn ${isHelpful === false ? 'helpful-no active' : 'helpful-no'}`}
+                            onClick={() => handleHelpfulClick(false)}
+                          >
+                            No
+                          </button>
                         </div>
                       </div>
                       
