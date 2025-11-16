@@ -112,7 +112,6 @@ function App() {
     setIsHelpful(helpful);
   };
 
-  // Search View
   if (currentView === 'search') {
     return (
       <div className="app">
