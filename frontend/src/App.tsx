@@ -26,14 +26,14 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<FactCheckResult | null>(null);
   const [error, setError] = useState<string>('');
-  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  const [, setHasSearched] = useState<boolean>(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [currentView, setCurrentView] = useState<'search' | 'results' | 'detail'>('search');
   const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [isHelpful, setIsHelpful] = useState<boolean | null>(null);
 
   const generateAiInsight = async (claimText: string): Promise<AiInsight> => {
-    const lowerClaim = claimText.toLowerCase();
+    // const lowerClaim = claimText.toLowerCase();
     
     const mockAiResponse: AiInsight = {
       insight: `Based on general knowledge about "${claimText}": This claim appears to be making a statement that may require verification. Without specific fact-check results, it's important to consult reliable sources and scientific evidence. The claim touches on topics that should be examined through established research and credible information sources.`,
