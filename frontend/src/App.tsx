@@ -64,7 +64,6 @@ function App() {
       
       setResult(response.data);
       
-      // Generate AI insight based on the actual claim
       const insightData = await generateAiInsight(claim.trim());
       setAiInsight(insightData);
       
