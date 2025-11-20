@@ -58,7 +58,7 @@ function App() {
     setIsHelpful(null);
 
     try {
-      const response = await axios.post<FactCheckResult>('http://127.0.0.1:8000/fact-check', {
+      const response = await axios.post<FactCheckResult>('https://treuscopebackend.vercel.app/fact-check', {
         claim: claim.trim()
       });
       
